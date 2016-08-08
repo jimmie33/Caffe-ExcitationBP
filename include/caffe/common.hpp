@@ -65,6 +65,35 @@ private:\
   INSTANTIATE_LAYER_GPU_FORWARD(classname); \
   INSTANTIATE_LAYER_GPU_BACKWARD(classname)
 
+
+// EB_GPU
+#define INSTANTIATE_LAYER_EB_GPU_BACKWARD(classname) \
+  template void classname<float>::Backward_eb_gpu( \
+      const std::vector<Blob<float>*>& top, \
+      const std::vector<bool>& propagate_down, \
+      const std::vector<Blob<float>*>& bottom); \
+  template void classname<double>::Backward_eb_gpu( \
+      const std::vector<Blob<double>*>& top, \
+      const std::vector<bool>& propagate_down, \
+      const std::vector<Blob<double>*>& bottom)
+
+#define INSTANTIATE_LAYER_EB_GPU_FUNCS(classname) \
+  INSTANTIATE_LAYER_EB_GPU_BACKWARD(classname)
+
+// DC_GPU
+#define INSTANTIATE_LAYER_DC_GPU_BACKWARD(classname) \
+  template void classname<float>::Backward_dc_gpu( \
+      const std::vector<Blob<float>*>& top, \
+      const std::vector<bool>& propagate_down, \
+      const std::vector<Blob<float>*>& bottom); \
+  template void classname<double>::Backward_dc_gpu( \
+      const std::vector<Blob<double>*>& top, \
+      const std::vector<bool>& propagate_down, \
+      const std::vector<Blob<double>*>& bottom)
+
+#define INSTANTIATE_LAYER_DC_GPU_FUNCS(classname) \
+  INSTANTIATE_LAYER_DC_GPU_BACKWARD(classname)
+
 // A simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
@@ -108,7 +137,7 @@ class Caffe {
   // on OSX. Also fails on Linux with CUDA 7.0.18.
   static Caffe& Get();
 
-  enum Brew { CPU, GPU };
+  enum Brew { CPU, GPU, EB_CPU, EB_GPU, DC_CPU, DC_GPU };
 
   // This random number generator facade hides boost and CUDA rng
   // implementation from one another (for cross-platform compatibility).

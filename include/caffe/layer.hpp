@@ -363,6 +363,52 @@ class Layer {
     Backward_cpu(top, propagate_down, bottom);
   }
 
+  // EB_GPU
+  /**
+   * @brief Using the CPU device, compute the gradients for any parameters and
+   *        for the bottom blobs if propagate_down is true.
+   */
+  virtual void Backward_eb_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<Dtype>*>& bottom) {
+    // LOG(WARNING) << "Using standard CPU code as backup.";
+    Backward_cpu(top, propagate_down, bottom);
+  }
+  /**
+   * @brief Using the GPU device, compute the gradients for any parameters and
+   *        for the bottom blobs if propagate_down is true.
+   *        Fall back to Backward_cpu() if unavailable.
+   */
+  virtual void Backward_eb_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<Dtype>*>& bottom) {
+    // LOG(WARNING) << "Using CPU code as backup.";
+    Backward_gpu(top, propagate_down, bottom);
+  }
+
+  // DC_GPU
+  /**
+   * @brief Using the CPU device, compute the gradients for any parameters and
+   *        for the bottom blobs if propagate_down is true.
+   */
+  virtual void Backward_dc_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<Dtype>*>& bottom) {
+    // LOG(WARNING) << "Using standard CPU code as backup.";
+    Backward_cpu(top, propagate_down, bottom);
+  }
+  /**
+   * @brief Using the GPU device, compute the gradients for any parameters and
+   *        for the bottom blobs if propagate_down is true.
+   *        Fall back to Backward_cpu() if unavailable.
+   */
+  virtual void Backward_dc_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<Dtype>*>& bottom) {
+    // LOG(WARNING) << "Using CPU code as backup.";
+    Backward_gpu(top, propagate_down, bottom);
+  }
+
   /**
    * Called by the parent Layer's SetUp to check that the number of bottom
    * and top Blobs provided as input match the expected numbers specified by
@@ -456,6 +502,8 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   Reshape(bottom, top);
   switch (Caffe::mode()) {
   case Caffe::CPU:
+  case Caffe::EB_CPU:
+  case Caffe::DC_CPU:
     Forward_cpu(bottom, top);
     for (int top_id = 0; top_id < top.size(); ++top_id) {
       if (!this->loss(top_id)) { continue; }
@@ -466,6 +514,8 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case Caffe::GPU:
+  case Caffe::EB_GPU:
+  case Caffe::DC_GPU:
     Forward_gpu(bottom, top);
 #ifndef CPU_ONLY
     for (int top_id = 0; top_id < top.size(); ++top_id) {
@@ -494,8 +544,20 @@ inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   case Caffe::CPU:
     Backward_cpu(top, propagate_down, bottom);
     break;
+  case Caffe::EB_CPU:
+    Backward_eb_cpu(top, propagate_down, bottom);
+    break;
+  case Caffe::DC_CPU:
+    Backward_dc_cpu(top, propagate_down, bottom);
+    break;
   case Caffe::GPU:
     Backward_gpu(top, propagate_down, bottom);
+    break;
+  case Caffe::EB_GPU:
+    Backward_eb_gpu(top, propagate_down, bottom);
+    break;
+  case Caffe::DC_GPU:
+    Backward_dc_gpu(top, propagate_down, bottom);
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";

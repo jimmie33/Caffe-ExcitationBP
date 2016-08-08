@@ -50,6 +50,10 @@ const int NPY_DTYPE = NPY_FLOAT32;
 // Selecting mode.
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
 void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
+void set_mode_eb_cpu() { Caffe::set_mode(Caffe::EB_CPU); }
+void set_mode_eb_gpu() { Caffe::set_mode(Caffe::EB_GPU); }
+void set_mode_dc_cpu() { Caffe::set_mode(Caffe::DC_CPU); }
+void set_mode_dc_gpu() { Caffe::set_mode(Caffe::DC_GPU); }
 
 void set_random_seed(unsigned int seed) { Caffe::set_random_seed(seed); }
 
@@ -285,6 +289,11 @@ BOOST_PYTHON_MODULE(_caffe) {
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
+  bp::def("set_mode_eb_cpu", &set_mode_eb_cpu);
+  bp::def("set_mode_eb_gpu", &set_mode_eb_gpu);
+  bp::def("set_mode_dc_cpu", &set_mode_dc_cpu);
+  bp::def("set_mode_dc_gpu", &set_mode_dc_gpu);
+
   bp::def("set_random_seed", &set_random_seed);
   bp::def("set_device", &Caffe::SetDevice);
 
