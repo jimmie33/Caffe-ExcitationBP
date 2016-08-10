@@ -945,6 +945,12 @@ void Net<Dtype>::ClearParamDiffs() {
       NO_GPU;
 #endif
       break;
+    case Caffe::EB_CPU:
+    case Caffe::EB_GPU:
+    case Caffe::DC_CPU:
+    case Caffe::DC_GPU:
+      // do nothing; suppress the warning
+      break;
     }
   }
 }
