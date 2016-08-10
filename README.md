@@ -1,3 +1,3 @@
-# Caffe-ExcitationEB
+# Caffe-ExcitationBP
 
 An Implementation of Excitation Backprop 

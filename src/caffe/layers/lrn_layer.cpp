@@ -175,6 +175,19 @@ void LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     LOG(FATAL) << "Unknown normalization region.";
   }
 }
+    
+template <typename Dtype>
+void LRNLayer<Dtype>::Backward_eb_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  switch (this->layer_param_.lrn_param().norm_region()) {
+  case LRNParameter_NormRegion_ACROSS_CHANNELS:
+  case LRNParameter_NormRegion_WITHIN_CHANNEL:
+    caffe_copy(top[0]->count(), top[0]->cpu_diff(), bottom[0]->mutable_cpu_diff());
+    break;
+  default:
+    LOG(FATAL) << "Unknown normalization region.";
+  }
+}
 
 template <typename Dtype>
 void LRNLayer<Dtype>::CrossChannelBackward_cpu(

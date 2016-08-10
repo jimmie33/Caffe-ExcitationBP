@@ -71,6 +71,46 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
   }
 }
+    
+template <typename Dtype>
+void ConvolutionLayer<Dtype>::Backward_eb_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  // get the new weight W+
+  const Dtype* W_data = this->blobs_[0]->cpu_data();
+  Blob<Dtype> W_plus(this->blobs_[0]->shape());
+  Dtype* W_plus_data = W_plus.mutable_cpu_data();
+  for (int i = 0; i < W_plus.count(); ++i) {
+    W_plus_data[i] = std::max(W_data[i], Dtype(0));
+  }
+  
+  Blob<Dtype> NN(top[0]->shape());
+  Dtype* NN_data = NN.mutable_cpu_data();
+  for (int i = 0; i < top.size(); ++i) {
+    if (propagate_down[i]) {
+      // compute the normalization factor by forwardpassing using W+
+      const Dtype* bottom_data = bottom[i]->cpu_data();
+      for (int n = 0; n < this->num_; ++n) {
+        this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, W_plus_data,
+            NN_data + n * this->top_dim_);
+      }
+      // do normalization
+      const Dtype* top_diff = top[i]->cpu_diff();
+      for (int j = 0; j < NN.count(); ++j) {
+        NN_data[j] = NN_data[j] == Dtype(0) ? Dtype(0):(top_diff[j]/NN_data[j]);
+      }  
+    
+      // do backward pass
+      Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
+      for (int n = 0; n < this->num_; ++n) {
+        this->backward_cpu_gemm(NN_data + n * this->top_dim_, W_plus_data,
+            bottom_diff + n * this->bottom_dim_);
+      }
+      
+      // multiply the bottom data
+      caffe_mul<Dtype>(bottom[i]->count(), bottom_diff, bottom_data, bottom_diff);
+    }
+  }
+}
 
 #ifdef CPU_ONLY
 STUB_GPU(ConvolutionLayer);

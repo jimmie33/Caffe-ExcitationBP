@@ -139,6 +139,52 @@ void InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
   }
 }
+    
+template <typename Dtype>
+void InnerProductLayer<Dtype>::Backward_eb_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
+  if (propagate_down[0]) {
+    // get the new weight W+ 
+    const Dtype* W_data = this->blobs_[0]->cpu_data();
+    Blob<Dtype> W_plus(this->blobs_[0]->shape());
+    Dtype* W_plus_data = W_plus.mutable_cpu_data();
+    
+    for (int i = 0; i < W_plus.count(); ++i) {
+      W_plus_data[i] = std::max(W_data[i], Dtype(0));
+    }
+    
+    // compute the normalization factor by forwardpassing using W+
+    Blob<Dtype> NN(top[0]->shape());  
+    Dtype* NN_data = NN.mutable_cpu_data();
+    const Dtype* bottom_data = bottom[0]->cpu_data();
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, transpose_ ? CblasNoTrans : CblasTrans,
+      M_, N_, K_, (Dtype)1.,
+      bottom_data, W_plus_data, (Dtype)0., NN_data);
+    
+    // do normalization
+    const Dtype* top_diff = top[0]->cpu_diff();
+    for (int i = 0; i < NN.count(); ++i) {
+      NN_data[i] = NN_data[i] == Dtype(0) ? Dtype(0):(top_diff[i]/NN_data[i]);
+    }  
+    
+    // do backwardpass
+    if (transpose_) {
+      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
+          M_, K_, N_,
+          (Dtype)1., NN_data, W_plus_data,
+          (Dtype)0., bottom[0]->mutable_cpu_diff());
+    } else {
+      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+          M_, K_, N_,
+          (Dtype)1., NN_data, W_plus_data,
+          (Dtype)0., bottom[0]->mutable_cpu_diff());
+    }
+    
+    // multiply the bottom data
+    caffe_mul<Dtype>(bottom[0]->count(), bottom[0]->cpu_diff(), bottom_data, bottom[0]->mutable_cpu_diff());
+  }
+}
 
 #ifdef CPU_ONLY
 STUB_GPU(InnerProductLayer);

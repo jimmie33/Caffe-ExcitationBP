@@ -119,6 +119,20 @@ void LRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 template <typename Dtype>
+void LRNLayer<Dtype>::Backward_eb_gpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  switch (this->layer_param_.lrn_param().norm_region()) {
+  case LRNParameter_NormRegion_ACROSS_CHANNELS:
+  case LRNParameter_NormRegion_WITHIN_CHANNEL:
+    CUDA_CHECK(cudaMemcpy(bottom[0]->mutable_gpu_diff(), top[0]->gpu_diff(), 
+          sizeof(Dtype) * bottom[0]->count(), cudaMemcpyDefault));
+    break;
+  default:
+    LOG(FATAL) << "Unknown normalization region.";
+  }
+}
+
+template <typename Dtype>
 __global__ void LRNComputeDiff(const int nthreads,
     const Dtype* const bottom_data, const Dtype* const top_data,
     const Dtype* const scale, const Dtype* const top_diff,
@@ -198,5 +212,6 @@ template void LRNLayer<double>::CrossChannelBackward_gpu(
 
 
 INSTANTIATE_LAYER_GPU_FUNCS(LRNLayer);
+INSTANTIATE_LAYER_EB_GPU_FUNCS(LRNLayer);
 
 }  // namespace caffe
