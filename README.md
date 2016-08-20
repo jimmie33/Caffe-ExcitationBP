@@ -2,7 +2,7 @@
 
 This is a Caffe implementation of Excitation Backprop described in
 
-> [Jianming Zhang, Zhe Lin, Jonathon Brandt, Xiaohui Shen, Stan Sclaroff. "Top-down Neural Attention by Excitation Backprop." ECCV, 2016. (oral)](http://cs-people.bu.edu/jmzhang/excitationBP.html)
+> [Jianming Zhang, Zhe Lin, Jonathon Brandt, Xiaohui Shen, Stan Sclaroff. "Top-down Neural Attention by Excitation Backprop." ECCV, 2016. (oral)](http://cs-people.bu.edu/jmzhang/excitationbp.html)
 
 __This software implementation is provided for academic research and non-commercial purposes only.  This implementation is provided without warranty.  The Excitation Backprop method described in the above paper and implemented in this software is patent-pending by Adobe.__
 
