@@ -22,3 +22,4 @@ __This software implementation is provided for academic research and non-commerc
 2. We implemented both GPU and CPU version of Excitation Backprop. Change `caffe.set_mode_eb_gpu()` to `caffe.set_mode_eb_cpu()` to run the CPU version.
 3. Our pre-train model is modified to be fully convolutional, so that images of any size and aspect raioe can be directly processed.
 4. To apply your own CNN model, you need to modify the deploy.prototxt according to **root_folder/models/COCO/deploy.prototxt**. Basically, you need to add a dummy loss layer at the end of the file. Make sure to remove any dropout layers.
+5. (__New__) We have made some modifications to make our method work on ResNet like models. When handling __EltwiseLayer__, we ignore the bottom input corresponding to the skip link. We find that this works better than splitting the signals.
