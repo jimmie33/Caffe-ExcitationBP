@@ -24,7 +24,10 @@ def getTagScore(scores, tags, tag2IDs):
 def showAttMap(img, attMaps, tagName, overlap = True, blur = False):
     pylab.rcParams['figure.figsize'] = (12.0, 12.0)
     f, ax = plt.subplots(len(tagName)/2+1, 2)
-    ax[0,0].imshow(img)
+    if len(ax.shape) == 1:
+        ax[0].imshow(img)
+    else:
+        ax[0, 0].imshow(img)
     
     for i in range(len(tagName)):
         attMap = attMaps[i].copy()
@@ -42,7 +45,10 @@ def showAttMap(img, attMaps, tagName, overlap = True, blur = False):
         attMapV = np.delete(attMapV, 3, 2)
         if overlap:
             attMap = 1*(1-attMap**0.8).reshape(attMap.shape + (1,))*img + (attMap**0.8).reshape(attMap.shape+(1,)) * attMapV;
-   
-        ax[(i+1)/2, (i+1)%2].imshow(attMap, interpolation = 'bicubic')
-        ax[(i+1)/2, (i+1)%2].set_title(tagName[i])
+        if len(ax.shape) == 1:
+            ax[i+1].imshow(attMap, interpolation = 'bicubic')
+            ax[i+1].set_title(tagName[i])
+        else:  
+            ax[(i+1)/2, (i+1)%2].imshow(attMap, interpolation = 'bicubic')
+            ax[(i+1)/2, (i+1)%2].set_title(tagName[i])
 
