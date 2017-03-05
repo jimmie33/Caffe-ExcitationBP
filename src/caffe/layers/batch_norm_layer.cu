@@ -165,7 +165,14 @@ void BatchNormLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   caffe_gpu_div(temp_.count(), bottom_diff, temp_.gpu_data(), bottom_diff);
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(BatchNormLayer);
+template <typename Dtype>
+void BatchNormLayer<Dtype>::Backward_eb_gpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  CUDA_CHECK(cudaMemcpy(bottom[0]->mutable_gpu_diff(), top[0]->gpu_diff(), 
+          sizeof(Dtype) * bottom[0]->count(), cudaMemcpyDefault));
+}
 
+INSTANTIATE_LAYER_GPU_FUNCS(BatchNormLayer);
+INSTANTIATE_LAYER_EB_GPU_FUNCS(BatchNormLayer);
 
 }  // namespace caffe

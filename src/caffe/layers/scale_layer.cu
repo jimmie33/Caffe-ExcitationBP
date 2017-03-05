@@ -129,7 +129,13 @@ void ScaleLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         count, top_diff, scale_data, scale_dim_, inner_dim_, bottom_diff);
   }
 }
+template <typename Dtype>
+void ScaleLayer<Dtype>::Backward_eb_gpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  CUDA_CHECK(cudaMemcpy(bottom[0]->mutable_gpu_diff(), top[0]->gpu_diff(), 
+          sizeof(Dtype) * bottom[0]->count(), cudaMemcpyDefault));
+}
 
 INSTANTIATE_LAYER_GPU_FUNCS(ScaleLayer);
-
+INSTANTIATE_LAYER_EB_GPU_FUNCS(ScaleLayer);
 }  // namespace caffe

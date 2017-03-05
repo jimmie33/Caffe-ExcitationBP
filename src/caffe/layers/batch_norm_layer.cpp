@@ -229,6 +229,11 @@ void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   caffe_div(temp_.count(), bottom_diff, temp_.cpu_data(), bottom_diff);
 }
 
+template <typename Dtype>
+void BatchNormLayer<Dtype>::Backward_eb_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  caffe_copy(top[0]->count(), top[0]->cpu_diff(), bottom[0]->mutable_cpu_diff());
+}
 
 #ifdef CPU_ONLY
 STUB_GPU(BatchNormLayer);

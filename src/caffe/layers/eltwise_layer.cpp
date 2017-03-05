@@ -150,6 +150,47 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+template <typename Dtype>
+void EltwiseLayer<Dtype>::Backward_eb_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  const int* mask = NULL;
+  const int count = top[0]->count();
+  const Dtype* top_data = top[0]->cpu_data();
+  const Dtype* top_diff = top[0]->cpu_diff();
+
+  for (int i = 0; i < bottom.size(); ++i) {
+    if (propagate_down[i]) {
+      const Dtype* bottom_data = bottom[i]->cpu_data();
+      Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
+      switch (op_) {
+      case EltwiseParameter_EltwiseOp_PROD:
+        if (stable_prod_grad_) 
+          LOG(FATAL) << "NOT IMPLEMENTED.";
+        break;
+      case EltwiseParameter_EltwiseOp_SUM:
+        if (i == 1)
+          caffe_copy(count, top_diff, bottom_diff);
+        else
+          caffe_set(count, (Dtype) 0.0, bottom_diff);
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      default:
+        LOG(FATAL) << "Unknown elementwise operation.";
+      }
+    }
+  }
+}
+
+
 #ifdef CPU_ONLY
 STUB_GPU(EltwiseLayer);
 #endif

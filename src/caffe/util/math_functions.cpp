@@ -85,7 +85,7 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
-    if (Caffe::mode() == Caffe::GPU) {
+    if (Caffe::mode() == Caffe::GPU || Caffe::mode() == Caffe::EB_GPU || Caffe::mode() == Caffe::DC_GPU) {
 #ifndef CPU_ONLY
       // NOLINT_NEXT_LINE(caffe/alt_fn)
       CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
