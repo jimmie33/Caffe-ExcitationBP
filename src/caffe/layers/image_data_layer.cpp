@@ -3,6 +3,7 @@
 
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -37,13 +38,16 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const string& source = this->layer_param_.image_data_param().source();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
-  string line;
-  size_t pos;
-  int label;
-  while (std::getline(infile, line)) {
-    pos = line.find_last_of(' ');
-    label = atoi(line.substr(pos + 1).c_str());
-    lines_.push_back(std::make_pair(line.substr(0, pos), label));
+  string filename;
+  string line_buff;
+  while (std::getline(infile, line_buff)) {
+    vector<int> label;
+    stringstream ss(line_buff);
+    ss >> filename;
+    int tmp_label;
+    while (ss >> tmp_label)
+        label.push_back(tmp_label);
+    lines_.push_back(std::make_pair(filename, label));
   }
 
   CHECK(!lines_.empty()) << "File is empty";
@@ -87,6 +91,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->width();
   // label
   vector<int> label_shape(1, batch_size);
+  if (this->layer_param_.image_data_param().label_vector())
+      label_shape.push_back(this->layer_param_.image_data_param().label_dim());
   top[1]->Reshape(label_shape);
   for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
     this->prefetch_[i].label_.Reshape(label_shape);
@@ -132,6 +138,10 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
+  // reset prefetch_label to zeros
+  for (int label_idx = 0; label_idx < batch->label_.count(); label_idx++)
+      prefetch_label[label_idx] = 0;
+
   // datum scales
   const int lines_size = lines_.size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
@@ -149,7 +159,13 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
 
-    prefetch_label[item_id] = lines_[lines_id_].second;
+    if (this->layer_param_.image_data_param().label_vector()) {
+        int step = this->layer_param_.image_data_param().label_dim();
+        for (int label_id = 0; label_id < lines_[lines_id_].second.size(); label_id++)
+            prefetch_label[item_id*step + lines_[lines_id_].second[label_id]] = 1;
+    }
+    else
+        prefetch_label[item_id] = lines_[lines_id_].second[0];
     // go to the next iter
     lines_id_++;
     if (lines_id_ >= lines_size) {
