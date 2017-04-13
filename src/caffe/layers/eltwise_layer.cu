@@ -80,6 +80,14 @@ __global__ void MaxBackward(const int nthreads, const Dtype* top_diff,
 }
 
 template <typename Dtype>
+__global__ void SumBackward(const int nthreads, const Dtype* top_diff,
+    const Dtype* bottom_data, const Dtype* top_data, Dtype* bottom_diff) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    bottom_diff[index] = top_data[index]==0 ? Dtype(0):top_diff[index]*bottom_data[index]/top_data[index];
+  }
+}
+    
+template <typename Dtype>
 void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const int* mask = NULL;
@@ -146,10 +154,13 @@ void EltwiseLayer<Dtype>::Backward_eb_gpu(const vector<Blob<Dtype>*>& top,
           LOG(FATAL) << "NOT IMPLEMENTED.";
         break;
       case EltwiseParameter_EltwiseOp_SUM:
-        if (i == 1)
-          caffe_copy(count, top_diff, bottom_diff);
-        else
-          caffe_gpu_scale(count, (Dtype) 0.0, top_diff, bottom_diff);
+        //if (i == 1)
+        //  caffe_copy(count, top_diff, bottom_diff);
+        //else
+        //  caffe_gpu_scale(count, (Dtype) 0.0, top_diff, bottom_diff);
+        SumBackward<Dtype>
+            <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+            count, top_diff, bottom_data, top_data, bottom_diff);
         break;
       case EltwiseParameter_EltwiseOp_MAX:
         mask = max_idx_.gpu_data();
@@ -163,6 +174,7 @@ void EltwiseLayer<Dtype>::Backward_eb_gpu(const vector<Blob<Dtype>*>& top,
     }
   }
 }
+
 
 
 INSTANTIATE_LAYER_GPU_FUNCS(EltwiseLayer);
