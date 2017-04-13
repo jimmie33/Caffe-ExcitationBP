@@ -168,10 +168,13 @@ void EltwiseLayer<Dtype>::Backward_eb_cpu(const vector<Blob<Dtype>*>& top,
           LOG(FATAL) << "NOT IMPLEMENTED.";
         break;
       case EltwiseParameter_EltwiseOp_SUM:
-        if (i == 1)
-          caffe_copy(count, top_diff, bottom_diff);
-        else
-          caffe_set(count, (Dtype) 0.0, bottom_diff);
+        //if (i == 1)
+        //  caffe_copy(count, top_diff, bottom_diff);
+        //else
+        //  caffe_set(count, (Dtype) 0.0, bottom_diff);
+        for (int j = 0; j < bottom[i]->count(); ++j) {
+          bottom_diff[j] = top_data[j] == 0 ? Dtype(0):top_diff[j]*bottom_data[j]/top_data[j];
+        }
         break;
       case EltwiseParameter_EltwiseOp_MAX:
         mask = max_idx_.cpu_data();
