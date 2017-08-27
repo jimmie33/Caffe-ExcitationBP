@@ -23,3 +23,6 @@ __This software implementation is provided for academic research and non-commerc
 3. Our pre-train model is modified to be fully convolutional, so that images of any size and aspect raioe can be directly processed.
 4. To apply your own CNN model, you need to modify the deploy.prototxt according to **root_folder/models/COCO/deploy.prototxt**. Basically, you need to add a dummy loss layer at the end of the file. Make sure to remove any dropout layers.
 5. (__New__) We have made some modifications to make our method work on ResNet like models. When handling __EltwiseLayer__, we ignore the bottom input corresponding to the skip link. We find that this works better than splitting the signals.
+
+## Summplementary Data
+1. Image lists for COCO and VOC07, including sublists for the difficult images used in the paper: [download](https://www.dropbox.com/s/xnnkyrfros2s2e4/datalist_coco%2Bvoc07.zip?dl=0)
